@@ -3,141 +3,25 @@ import json
 import pytest
 
 
+@pytest.fixture(scope="session")
+def celery_config():
+    return {"conductor_server_api_url": "https://localhost:8080/api"}
+
+
+@pytest.fixture(scope="session")
+def celery_includes():
+    return ["conductor_celery.tasks"]
+
+
 @pytest.fixture
 def task_poll_response():
     def inner(input_data):
-        response = json.dumps(
-            {
-                "callback_after_seconds": 0,
-                "callback_from_worker": True,
-                "correlation_id": None,
-                "domain": None,
-                "end_time": 0,
-                "executed": False,
-                "execution_name_space": None,
-                "external_input_payload_storage_path": None,
-                "external_output_payload_storage_path": None,
-                "inputData": input_data,
-                "isolation_group_id": None,
-                "iteration": 0,
-                "loop_over_task": False,
-                "output_data": {},
-                "poll_count": 1,
-                "queue_wait_time": 63552,
-                "rate_limit_frequency_in_seconds": 1,
-                "rate_limit_per_frequency": 0,
-                "reason_for_incompletion": None,
-                "reference_task_name": "celery_test_task_ref",
-                "response_timeout_seconds": 3600,
-                "retried": False,
-                "retried_task_id": None,
-                "retry_count": 0,
-                "scheduled_time": 1691936100498,
-                "seq": 1,
-                "start_delay_in_seconds": 0,
-                "start_time": 1691936164050,
-                "status": "IN_PROGRESS",
-                "sub_workflow_id": None,
-                "subworkflow_changed": False,
-                "task_def_name": "celery_test_task",
-                "task_definition": {
-                    "backoff_scale_factor": 1,
-                    "concurrent_exec_limit": None,
-                    "create_time": 1691935582212,
-                    "created_by": "",
-                    "description": "shipping Workflow",
-                    "execution_name_space": None,
-                    "input_keys": ["a", "b"],
-                    "input_template": {},
-                    "isolation_group_id": None,
-                    "name": "celery_test_task",
-                    "output_keys": [],
-                    "owner_app": None,
-                    "owner_email": "tomas.correa@gmail.com",
-                    "poll_timeout_seconds": None,
-                    "rate_limit_frequency_in_seconds": 1,
-                    "rate_limit_per_frequency": 0,
-                    "response_timeout_seconds": 3600,
-                    "retry_count": 3,
-                    "retry_delay_seconds": 60,
-                    "retry_logic": "FIXED",
-                    "timeout_policy": "ALERT_ONLY",
-                    "timeout_seconds": 0,
-                    "update_time": None,
-                    "updated_by": None,
-                },
-                "task_id": "ca08872c-39e3-11ee-868b-06fd3bd0ae8b",
-                "task_type": "celery_test_task",
-                "update_time": 1691936164050,
-                "worker_id": "6b72840d72b0",
-                "workflow_instance_id": "ca0775bb-39e3-11ee-868b-06fd3bd0ae8b",
-                "workflow_priority": 0,
-                "workflow_task": {
-                    "async_complete": False,
-                    "case_expression": None,
-                    "case_value_param": None,
-                    "decision_cases": None,
-                    "default_case": None,
-                    "default_exclusive_join_task": None,
-                    "description": None,
-                    "dynamic_fork_join_tasks_param": None,
-                    "dynamic_fork_tasks_input_param_name": None,
-                    "dynamic_fork_tasks_param": None,
-                    "dynamic_task_name_param": None,
-                    "evaluator_type": None,
-                    "expression": None,
-                    "fork_tasks": None,
-                    "input_parameters": {
-                        "http_request": {
-                            "method": "GET",
-                            "uri": "https://datausa.io/api/data?drilldowns=Nation&measures=Population",
-                        }
-                    },
-                    "join_on": None,
-                    "loop_condition": None,
-                    "loop_over": None,
-                    "name": "celery_test_task",
-                    "optional": False,
-                    "rate_limited": None,
-                    "retry_count": None,
-                    "script_expression": None,
-                    "sink": None,
-                    "start_delay": 0,
-                    "sub_workflow_param": None,
-                    "task_definition": {
-                        "backoff_scale_factor": 1,
-                        "concurrent_exec_limit": None,
-                        "create_time": 1691935582212,
-                        "created_by": "",
-                        "description": "shipping Workflow",
-                        "execution_name_space": None,
-                        "input_keys": [],
-                        "input_template": {},
-                        "isolation_group_id": None,
-                        "name": "celery_test_task",
-                        "output_keys": [],
-                        "owner_app": None,
-                        "owner_email": "tomas.correa@gmail.com",
-                        "poll_timeout_seconds": None,
-                        "rate_limit_frequency_in_seconds": 1,
-                        "rate_limit_per_frequency": 0,
-                        "response_timeout_seconds": 3600,
-                        "retry_count": 3,
-                        "retry_delay_seconds": 60,
-                        "retry_logic": "FIXED",
-                        "timeout_policy": "ALERT_ONLY",
-                        "timeout_seconds": 0,
-                        "update_time": None,
-                        "updated_by": None,
-                    },
-                    "task_reference_name": "celery_test_task_ref",
-                    "type": "SIMPLE",
-                    "workflow_task_type": None,
-                },
-                "workflow_type": "celery_test_workflow",
-            }
+        response = json.loads(
+            '{"taskType":"celery_test_task","status":"IN_PROGRESS","inputData":"","referenceTaskName":"celery_test_task_ref","retryCount":0,"seq":1,"pollCount":1,"taskDefName":"celery_test_task","scheduledTime":1691960284387,"startTime":1691960484581,"endTime":0,"updateTime":1691960484582,"startDelayInSeconds":0,"retried":false,"executed":false,"callbackFromWorker":true,"responseTimeoutSeconds":3600,"workflowInstanceId":"18bfeabf-3a1c-11ee-868b-06fd3bd0ae8b","workflowType":"celery_test_workflow","taskId":"18c0fc30-3a1c-11ee-868b-06fd3bd0ae8b","callbackAfterSeconds":0,"workerId":"localhost","outputData":{},"workflowTask":{"name":"celery_test_task","taskReferenceName":"celery_test_task_ref","description":null,"inputParameters":{"http_request":{"uri":"https://datausa.io/api/data?drilldowns=Nation&measures=Population","method":"GET"}},"type":"SIMPLE","dynamicTaskNameParam":null,"caseValueParam":null,"caseExpression":null,"scriptExpression":null,"dynamicForkJoinTasksParam":null,"dynamicForkTasksParam":null,"dynamicForkTasksInputParamName":null,"startDelay":0,"subWorkflowParam":null,"sink":null,"optional":false,"taskDefinition":{"ownerApp":null,"createTime":1691935582212,"updateTime":null,"createdBy":"","updatedBy":null,"name":"celery_test_task","description":"shipping'
+            ' Workflow","retryCount":3,"timeoutSeconds":0,"inputKeys":[],"outputKeys":[],"timeoutPolicy":"ALERT_ONLY","retryLogic":"FIXED","retryDelaySeconds":60,"responseTimeoutSeconds":3600,"concurrentExecLimit":null,"inputTemplate":{},"rateLimitPerFrequency":0,"rateLimitFrequencyInSeconds":1,"isolationGroupId":null,"executionNameSpace":null,"ownerEmail":"tomas.correa@gmail.com","pollTimeoutSeconds":null,"backoffScaleFactor":1},"rateLimited":null,"asyncComplete":false,"loopCondition":null,"retryCount":null,"evaluatorType":null,"expression":null},"rateLimitPerFrequency":0,"rateLimitFrequencyInSeconds":1,"workflowPriority":0,"iteration":0,"subworkflowChanged":false,"queueWaitTime":200194,"loopOverTask":false,"taskDefinition":{"ownerApp":null,"createTime":1691935582212,"updateTime":null,"createdBy":"","updatedBy":null,"name":"celery_test_task","description":"shipping'
+            ' Workflow","retryCount":3,"timeoutSeconds":0,"inputKeys":[],"outputKeys":[],"timeoutPolicy":"ALERT_ONLY","retryLogic":"FIXED","retryDelaySeconds":60,"responseTimeoutSeconds":3600,"concurrentExecLimit":null,"inputTemplate":{},"rateLimitPerFrequency":0,"rateLimitFrequencyInSeconds":1,"isolationGroupId":null,"executionNameSpace":null,"ownerEmail":"tomas.correa@gmail.com","pollTimeoutSeconds":null,"backoffScaleFactor":1}}'
         )
-
-        return response
+        response["inputData"] = input_data
+        return json.dumps(response)
 
     return inner

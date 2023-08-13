@@ -1,4 +1,3 @@
-
 from typing import Any
 from celery import Task
 from conductor.client.automator import task_runner
@@ -40,12 +39,35 @@ class ConductorTask(Task):
         metrics_settings = MetricsSettings()
         self.runner = TaskRunner(self.worker, configuration, metrics_settings)
 
-
-    def apply(self, args=None, kwargs=None, link=None, link_error=None, task_id=None, retries=None, throw=None, logfile=None, loglevel=None, headers=None, **options) -> Any:
-        
+    def apply(
+        self,
+        args=None,
+        kwargs=None,
+        link=None,
+        link_error=None,
+        task_id=None,
+        retries=None,
+        throw=None,
+        logfile=None,
+        loglevel=None,
+        headers=None,
+        **options,
+    ) -> Any:
         self._conductor_before_start()
         conductor_task = self.runner.poll_task()
-        ret = super().apply(None, conductor_task.input_data, link, link_error, task_id, retries, throw, logfile, loglevel, headers, **options)
+        ret = super().apply(
+            None,
+            conductor_task.input_data,
+            link,
+            link_error,
+            task_id,
+            retries,
+            throw,
+            logfile,
+            loglevel,
+            headers,
+            **options,
+        )
 
         task_result = TaskResult(
             task_id=conductor_task.task_id,
@@ -54,7 +76,7 @@ class ConductorTask(Task):
         )
         for key, value in ret.result.items():
             task_result.add_output_data(key, value)
-        
+
         task_result.status = "COMPLETED"
 
         self.runner.update_task(task_result)

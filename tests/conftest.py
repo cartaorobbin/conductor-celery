@@ -46,7 +46,7 @@ def task_poll_response():
                     "created_by": "",
                     "description": "shipping Workflow",
                     "execution_name_space": None,
-                    "input_keys": ['a', 'b'],
+                    "input_keys": ["a", "b"],
                     "input_template": {},
                     "isolation_group_id": None,
                     "name": "celery_test_task",
@@ -138,4 +138,5 @@ def task_poll_response():
         )
 
         return response
+
     return inner

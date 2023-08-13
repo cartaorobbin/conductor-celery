@@ -1,11 +1,12 @@
 from typing import Any
+
 from celery import Task
 from conductor.client.automator import task_runner
-from conductor.client.worker.worker_interface import WorkerInterface
-from conductor.client.configuration.settings.metrics_settings import MetricsSettings
-
 from conductor.client.configuration.configuration import Configuration
+from conductor.client.configuration.settings.metrics_settings import MetricsSettings
+from conductor.client.http.models.task import Task as _ConductorTask
 from conductor.client.http.models.task_result import TaskResult
+from conductor.client.worker.worker_interface import WorkerInterface
 
 
 class Worker(WorkerInterface):
@@ -20,10 +21,10 @@ class Worker(WorkerInterface):
 
 
 class TaskRunner(task_runner.TaskRunner):
-    def poll_task(self):
+    def poll_task(self) -> _ConductorTask:
         return self.__poll_task()
 
-    def update_task(self, retval: Any):
+    def update_task(self, retval: Any) -> Any:
         return self.__update_task(retval)
 
 

@@ -1,8 +1,6 @@
-from conductor_celery.tasks import ConductorTask
-import pytest
 import httpretty
-import re
-import json
+
+from conductor_celery.tasks import ConductorTask
 
 httpretty.enable(allow_net_connect=False, verbose=True)
 

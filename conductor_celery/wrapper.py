@@ -1,7 +1,9 @@
 from typing import Any
-from conductor.client.worker.worker_interface import WorkerInterface
-from conductor.client.http.models.task import Task
+
 from conductor.client.automator import task_runner
+from conductor.client.http.models.task import Task
+from conductor.client.worker.worker_interface import WorkerInterface
+
 
 class Worker(WorkerInterface):
     def __init__(self, task_definition_name) -> None:

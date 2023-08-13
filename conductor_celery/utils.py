@@ -1,8 +1,9 @@
-
 from conductor.client.configuration.configuration import Configuration
 from conductor.client.configuration.settings.metrics_settings import MetricsSettings
-from conductor_celery.wrapper import TaskRunner, Worker
 from conductor.client.http.models.task_result import TaskResult
+
+from conductor_celery.wrapper import TaskRunner, Worker
+
 
 def configure_runner(server_api_url: str, name: str, debug=False):
     configuration = Configuration(server_api_url=server_api_url, debug=True)

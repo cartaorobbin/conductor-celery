@@ -1,9 +1,12 @@
+import logging
 from typing import Any
 
 from celery import Task, shared_task
 
 from conductor_celery.utils import configure_runner
 from conductor_celery.utils import update_task as real_update_task
+
+logger = logging.Logger(__file__)
 
 
 class ConductorPollTask(Task):
@@ -29,7 +32,10 @@ class ConductorTask(Task):
         headers=None,
         **options,
     ) -> Any:
-        runner = configure_runner(server_api_url=self.app.conf["conductor_server_api_url"], name=self.name, debug=True)
+        server_api_url = self.app.conf["conductor_server_api_url"]
+        logger.info(f"ConductorTask configure_runner: ${server_api_url}")
+
+        runner = configure_runner(server_api_url=server_api_url, name=self.name, debug=True)
         conductor_task = runner.poll_task()
 
         ret = super().apply(

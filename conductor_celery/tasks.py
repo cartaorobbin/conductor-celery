@@ -25,6 +25,9 @@ class ConductorTask(Task):
 
         conductor_task = runner.poll_task()
 
+        if conductor_task.task_id is None:
+            return
+
         ret = self.run(**conductor_task.input_data)
 
         runner.update_task(

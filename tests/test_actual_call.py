@@ -1,11 +1,3 @@
-import json
-import socket
-
-import httpretty
-
-from conductor_celery.tasks import ConductorTask
-
-
 # def test_conductor_task_case(celery_app, celery_worker):
 
 
@@ -15,5 +7,3 @@ from conductor_celery.tasks import ConductorTask
 
 #     celery_worker.reload()
 #     assert mul.apply().result == {"total": 8}
-
-

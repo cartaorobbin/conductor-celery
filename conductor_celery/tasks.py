@@ -6,7 +6,7 @@ from celery import Task, shared_task
 from conductor_celery.utils import configure_runner
 from conductor_celery.utils import update_task as real_update_task
 
-logger = logging.Logger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class ConductorPollTask(Task):

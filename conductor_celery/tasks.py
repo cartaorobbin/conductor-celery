@@ -28,7 +28,7 @@ class ConductorTask(Task):
         if conductor_task.task_id is None:
             return
 
-        logger.info(f'running task:{conductor_task.task_id} workflow: {conductor_task.workflow_instance_id}')
+        logger.info(f"running task:{conductor_task.task_id} workflow: {conductor_task.workflow_instance_id}")
         ret = self.run(**conductor_task.input_data)
 
         runner.update_task(

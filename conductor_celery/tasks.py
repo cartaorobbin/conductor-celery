@@ -19,7 +19,7 @@ class ConductorTask(Task):
 
     def __call__(self, *args, **kwargs):
         server_api_url = self.app.conf["conductor_server_api_url"]
-        logger.info(f"ConductorTask configure_runner: ${server_api_url}")
+        logger.debug(f"ConductorTask configure_runner: {server_api_url}")
 
         runner = configure_runner(server_api_url=server_api_url, name=self.name, debug=True)
 
@@ -28,6 +28,7 @@ class ConductorTask(Task):
         if conductor_task.task_id is None:
             return
 
+        logger.info(f'running task:{conductor_task.task_id} workflow: {conductor_task.workflow_instance_id}')
         ret = self.run(**conductor_task.input_data)
 
         runner.update_task(

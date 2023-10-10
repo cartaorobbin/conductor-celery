@@ -13,7 +13,7 @@ def configure_runner(server_api_url: str, name: str, debug=False):
     return TaskRunner(worker, configuration, metrics_settings)
 
 
-def update_task(task_id, workflow_instance_id, worker_id, values) -> TaskResult:
+def update_task(task_id, workflow_instance_id, worker_id, values, status) -> TaskResult:
     task_result = TaskResult(
         task_id=task_id,
         workflow_instance_id=workflow_instance_id,
@@ -22,5 +22,5 @@ def update_task(task_id, workflow_instance_id, worker_id, values) -> TaskResult:
     for key, value in values.items():
         task_result.add_output_data(key, value)
 
-    task_result.status = "COMPLETED"
+    task_result.status = status
     return task_result

@@ -1,6 +1,8 @@
+import imp
 import logging
 
 from celery import Task, shared_task
+import py
 
 from conductor_celery.utils import configure_runner
 from conductor_celery.utils import update_task as real_update_task
@@ -23,16 +25,35 @@ class ConductorTask(Task):
 
         runner = configure_runner(server_api_url=server_api_url, name=self.name, debug=True)
 
-        conductor_task = runner.poll_task()
+        if self.request.retries == 0:
+            conductor_task = runner.poll_task()
 
-        if conductor_task.task_id is None:
-            return
+            if conductor_task.task_id is None:
+                return
+            kwargs = conductor_task.input_data
+            self.request.kwargs = conductor_task.input_data
+            self.request.args = ()
+            self.request.headers = conductor_task
+        else:
+            conductor_task = self.request.headers
 
         logger.info(f"running task:{conductor_task.task_id} workflow: {conductor_task.workflow_instance_id}")
-        ret = self.run(**conductor_task.input_data)
+        
+        try:
+            ret = self.run(**kwargs)
+            status = "COMPLETED"
+        except Exception as exc:
+            logger.exception(f"Error running task:{conductor_task.task_id} workflow: {conductor_task.workflow_instance_id}")
+            ret = {"error": str(exc)}
+            status = "FAILED"
+            if self.request.retries == self.max_retries:
+                runner.update_task(
+                    real_update_task(conductor_task.task_id, conductor_task.workflow_instance_id, conductor_task.worker_id, ret, status)
+                )
+            raise
 
         runner.update_task(
-            real_update_task(conductor_task.task_id, conductor_task.workflow_instance_id, conductor_task.worker_id, ret)
+            real_update_task(conductor_task.task_id, conductor_task.workflow_instance_id, conductor_task.worker_id, ret, status)
         )
         return ret
 
@@ -40,4 +61,4 @@ class ConductorTask(Task):
 @shared_task(bind=True)
 def update_task(self, name, task_id, workflow_instance_id, worker_id, values):
     runner = configure_runner(server_api_url=self.app.conf["conductor_server_api_url"], name=name, debug=True)
-    runner.update_task(real_update_task(task_id, workflow_instance_id, worker_id, values))
+    runner.update_task(real_update_task(task_id, workflow_instance_id, worker_id, values, "COMPLETED"))

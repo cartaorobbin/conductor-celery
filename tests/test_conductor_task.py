@@ -1,6 +1,6 @@
 import json
 import socket
-
+import pytest
 import httpretty
 
 from conductor_celery.tasks import ConductorTask
@@ -213,6 +213,38 @@ def test_conductor_task_delay(celery_app, celery_worker, task_poll_response):
 
     assert body["outputData"] == {"company": "3"}
     assert body["status"] == "COMPLETED"
+
+    assert body["workflowInstanceId"] == "18bfeabf-3a1c-11ee-868b-06fd3bd0ae8b"
+    assert body["taskId"] == "18c0fc30-3a1c-11ee-868b-06fd3bd0ae8b"
+    assert body["workerId"] == "localhost"
+
+    assert list(body.keys()) == ["workflowInstanceId", "taskId", "workerId", "status", "outputData"]
+
+
+
+def test_conductor_task_error(celery_app, celery_worker, task_poll_response):
+    httpretty.reset()
+    httpretty.register_uri(
+        httpretty.GET,
+        "https://localhost:8080/api/tasks/poll/celery_test_task?workerid=localhost",
+        body=task_poll_response({"x": 2, "y": 0}),
+    )
+
+    httpretty.register_uri(httpretty.POST, "https://localhost:8080/api/tasks", body="1233444")
+
+    @celery_app.task(base=ConductorTask, name="celery_test_task", autoretry_for=(ZeroDivisionError,))
+    def div(x, y):
+        return {"total": x / y}
+
+    celery_worker.reload()
+    assert div.apply([2, 0]).result.__class__ == ZeroDivisionError
+
+    assert len(httpretty.latest_requests()) == 3
+    assert httpretty.latest_requests()[-1].url == "https://localhost:8080/api/tasks"
+    body = json.loads(httpretty.latest_requests()[-1].body)
+    
+    assert body["outputData"] == {'error': 'division by zero'}
+    assert body["status"] == "FAILED"
 
     assert body["workflowInstanceId"] == "18bfeabf-3a1c-11ee-868b-06fd3bd0ae8b"
     assert body["taskId"] == "18c0fc30-3a1c-11ee-868b-06fd3bd0ae8b"

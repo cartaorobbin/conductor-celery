@@ -9,6 +9,7 @@ httpretty.enable(allow_net_connect=False, verbose=True)
 
 
 def test_update_task(celery_app, celery_worker, task_poll_response):
+    httpretty.reset()
     httpretty.register_uri(
         httpretty.GET,
         "https://localhost:8080/api/tasks/poll/celery_test_task?workerid=localhost",

@@ -1,6 +1,6 @@
 import json
 import socket
-import pytest
+
 import httpretty
 
 from conductor_celery.tasks import ConductorTask
@@ -221,7 +221,6 @@ def test_conductor_task_delay(celery_app, celery_worker, task_poll_response):
     assert list(body.keys()) == ["workflowInstanceId", "taskId", "workerId", "status", "outputData"]
 
 
-
 def test_conductor_task_error(celery_app, celery_worker, task_poll_response):
     httpretty.reset()
     httpretty.register_uri(
@@ -242,8 +241,8 @@ def test_conductor_task_error(celery_app, celery_worker, task_poll_response):
     assert len(httpretty.latest_requests()) == 3
     assert httpretty.latest_requests()[-1].url == "https://localhost:8080/api/tasks"
     body = json.loads(httpretty.latest_requests()[-1].body)
-    
-    assert body["outputData"] == {'error': 'division by zero'}
+
+    assert body["outputData"] == {"error": "division by zero"}
     assert body["status"] == "FAILED"
 
     assert body["workflowInstanceId"] == "18bfeabf-3a1c-11ee-868b-06fd3bd0ae8b"

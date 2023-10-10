@@ -1,8 +1,6 @@
-import imp
 import logging
 
 from celery import Task, shared_task
-import py
 
 from conductor_celery.utils import configure_runner
 from conductor_celery.utils import update_task as real_update_task
@@ -38,22 +36,32 @@ class ConductorTask(Task):
             conductor_task = self.request.headers
 
         logger.info(f"running task:{conductor_task.task_id} workflow: {conductor_task.workflow_instance_id}")
-        
+
         try:
             ret = self.run(**kwargs)
             status = "COMPLETED"
         except Exception as exc:
-            logger.exception(f"Error running task:{conductor_task.task_id} workflow: {conductor_task.workflow_instance_id}")
+            logger.exception(
+                f"Error running task:{conductor_task.task_id} workflow: {conductor_task.workflow_instance_id}"
+            )
             ret = {"error": str(exc)}
             status = "FAILED"
             if self.request.retries == self.max_retries:
                 runner.update_task(
-                    real_update_task(conductor_task.task_id, conductor_task.workflow_instance_id, conductor_task.worker_id, ret, status)
+                    real_update_task(
+                        conductor_task.task_id,
+                        conductor_task.workflow_instance_id,
+                        conductor_task.worker_id,
+                        ret,
+                        status,
+                    )
                 )
             raise
 
         runner.update_task(
-            real_update_task(conductor_task.task_id, conductor_task.workflow_instance_id, conductor_task.worker_id, ret, status)
+            real_update_task(
+                conductor_task.task_id, conductor_task.workflow_instance_id, conductor_task.worker_id, ret, status
+            )
         )
         return ret
 

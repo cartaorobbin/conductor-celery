@@ -32,44 +32,51 @@ class ConductorTask(Task):
         logger.debug(f"ConductorTask configure_runner: {server_api_url}")
         self.runner = configure_runner(server_api_url=server_api_url, name=self.name, debug=True)
 
-
     def before_start(self, task_id, args, kwargs):
-
         if not self.request.headers:
             self.request.headers = {}
         # import pytest; pytest.set_trace()
-        if 'conductor' not in self.request.headers:
+        if "conductor" not in self.request.headers:
             conductor_task = self.runner.poll_task()
             if conductor_task.task_id:
-                self.request.headers["conductor"] = asdict(PooledConductorTask(
-                    input_data=conductor_task.input_data,
-                    task_id=conductor_task.task_id,
-                    workflow_instance_id=conductor_task.workflow_instance_id,
-                    worker_id=conductor_task.worker_id,
-                ))
+                self.request.headers["conductor"] = asdict(
+                    PooledConductorTask(
+                        input_data=conductor_task.input_data,
+                        task_id=conductor_task.task_id,
+                        workflow_instance_id=conductor_task.workflow_instance_id,
+                        worker_id=conductor_task.worker_id,
+                    )
+                )
                 self.request.kwargs = conductor_task.input_data
                 self.request.args = []
 
-
     def on_success(self, retval, task_id, args, kwargs):
-        if 'conductor' not in self.request.headers:
+        if "conductor" not in self.request.headers:
             return
 
         conductor_task = PooledConductorTask(**self.request.headers["conductor"])
         self.runner.update_task(
             real_update_task(
-                conductor_task.task_id, conductor_task.workflow_instance_id, conductor_task.worker_id, retval, "COMPLETED"
+                conductor_task.task_id,
+                conductor_task.workflow_instance_id,
+                conductor_task.worker_id,
+                retval,
+                "COMPLETED",
             )
         )
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        if 'conductor' not in self.request.headers:
+        if "conductor" not in self.request.headers:
             return
 
         conductor_task = PooledConductorTask(**self.request.headers["conductor"])
         self.runner.update_task(
             real_update_task(
-                conductor_task.task_id, conductor_task.workflow_instance_id, conductor_task.worker_id, {"error": str(exc)}, "FAILED"
+                conductor_task.task_id,
+                conductor_task.workflow_instance_id,
+                conductor_task.worker_id,
+                {"error": str(exc)},
+                "FAILED",
             )
         )
 
@@ -77,7 +84,7 @@ class ConductorTask(Task):
         """
         A task can be called like a regular function. But use conductor args and kwargs
         """
-        if 'conductor' not in self.request.headers:
+        if "conductor" not in self.request.headers:
             return
 
         return self.run(**self.request.kwargs)

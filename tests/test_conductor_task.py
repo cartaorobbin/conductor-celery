@@ -281,5 +281,3 @@ def test_conductor_task_error_without_auto_retry(celery_app, celery_worker, task
     assert body["workerId"] == "localhost"
 
     assert list(body.keys()) == ["workflowInstanceId", "taskId", "workerId", "status", "outputData"]
-
-

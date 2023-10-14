@@ -32,11 +32,11 @@ class ConductorTask(Task):
             self.request.kwargs = conductor_task.input_data
             self.request.args = ()
             if not self.request.headers:
-                self.request.headers = {'conductor': conductor_task}
+                self.request.headers = {"conductor": conductor_task}
             else:
-                self.request.headers['conductor'] = conductor_task
+                self.request.headers["conductor"] = conductor_task
         else:
-            conductor_task = self.request.headers['conductor']
+            conductor_task = self.request.headers["conductor"]
 
         logger.info(f"running task:{conductor_task.task_id} workflow: {conductor_task.workflow_instance_id}")
 
@@ -49,7 +49,7 @@ class ConductorTask(Task):
             )
             ret = {"error": str(exc)}
             status = "FAILED"
-            
+
             if self.request.retries == self.max_retries:
                 runner.update_task(
                     real_update_task(

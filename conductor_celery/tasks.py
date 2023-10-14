@@ -26,65 +26,61 @@ class ConductorTask(Task):
     This handle a canductor task
     """
 
-    def __call__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         server_api_url = self.app.conf["conductor_server_api_url"]
         logger.debug(f"ConductorTask configure_runner: {server_api_url}")
+        self.runner = configure_runner(server_api_url=server_api_url, name=self.name, debug=True)
 
-        runner = configure_runner(server_api_url=server_api_url, name=self.name, debug=True)
 
-        if self.request.retries == 0:
-            conductor_task = runner.poll_task()
+    def before_start(self, task_id, args, kwargs):
 
-            if conductor_task.task_id is None:
-                return
+        if not self.request.headers:
+            self.request.headers = {}
+        # import pytest; pytest.set_trace()
+        if 'conductor' not in self.request.headers:
+            conductor_task = self.runner.poll_task()
+            if conductor_task.task_id:
+                self.request.headers["conductor"] = asdict(PooledConductorTask(
+                    input_data=conductor_task.input_data,
+                    task_id=conductor_task.task_id,
+                    workflow_instance_id=conductor_task.workflow_instance_id,
+                    worker_id=conductor_task.worker_id,
+                ))
+                self.request.kwargs = conductor_task.input_data
+                self.request.args = []
 
-            pct = PooledConductorTask(
-                input_data=conductor_task.input_data,
-                task_id=conductor_task.task_id,
-                workflow_instance_id=conductor_task.workflow_instance_id,
-                worker_id=conductor_task.worker_id,
-            )
 
-            kwargs = conductor_task.input_data
-            self.request.kwargs = conductor_task.input_data
-            self.request.args = ()
-            if not self.request.headers:
-                self.request.headers = {"conductor": asdict(pct)}
-            else:
-                self.request.headers["conductor"] = asdict(pct)
-        else:
-            conductor_task = PooledConductorTask(**self.request.headers["conductor"])
+    def on_success(self, retval, task_id, args, kwargs):
+        if 'conductor' not in self.request.headers:
+            return
 
-        logger.info(f"running task:{conductor_task.task_id} workflow: {conductor_task.workflow_instance_id}")
-
-        try:
-            ret = self.run(**kwargs)
-            status = "COMPLETED"
-        except Exception as exc:
-            logger.exception(
-                f"Error running task:{conductor_task.task_id} workflow: {conductor_task.workflow_instance_id}"
-            )
-            ret = {"error": str(exc)}
-            status = "FAILED"
-
-            if self.request.retries == self.max_retries:
-                runner.update_task(
-                    real_update_task(
-                        conductor_task.task_id,
-                        conductor_task.workflow_instance_id,
-                        conductor_task.worker_id,
-                        ret,
-                        status,
-                    )
-                )
-            raise
-
-        runner.update_task(
+        conductor_task = PooledConductorTask(**self.request.headers["conductor"])
+        self.runner.update_task(
             real_update_task(
-                conductor_task.task_id, conductor_task.workflow_instance_id, conductor_task.worker_id, ret, status
+                conductor_task.task_id, conductor_task.workflow_instance_id, conductor_task.worker_id, retval, "COMPLETED"
             )
         )
-        return ret
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        if 'conductor' not in self.request.headers:
+            return
+
+        conductor_task = PooledConductorTask(**self.request.headers["conductor"])
+        self.runner.update_task(
+            real_update_task(
+                conductor_task.task_id, conductor_task.workflow_instance_id, conductor_task.worker_id, {"error": str(exc)}, "FAILED"
+            )
+        )
+
+    def __call__(self, *args, **kwargs):
+        """
+        A task can be called like a regular function. But use conductor args and kwargs
+        """
+        if 'conductor' not in self.request.headers:
+            return
+
+        return self.run(**self.request.kwargs)
 
 
 @shared_task(bind=True)

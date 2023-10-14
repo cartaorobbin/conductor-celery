@@ -1,5 +1,5 @@
 import logging
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 from celery import Task, shared_task
 
@@ -49,11 +49,11 @@ class ConductorTask(Task):
             self.request.kwargs = conductor_task.input_data
             self.request.args = ()
             if not self.request.headers:
-                self.request.headers = {"conductor": pct}
+                self.request.headers = {"conductor": asdict(pct)}
             else:
-                self.request.headers["conductor"] = pct
+                self.request.headers["conductor"] = asdict(pct)
         else:
-            conductor_task = self.request.headers["conductor"]
+            conductor_task = PooledConductorTask(**self.request.headers["conductor"])
 
         logger.info(f"running task:{conductor_task.task_id} workflow: {conductor_task.workflow_instance_id}")
 

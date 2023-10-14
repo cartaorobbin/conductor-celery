@@ -45,11 +45,8 @@ class ConductorTask(Task):
         Returns:
             None
         """
-
-    def before_start(self, task_id, args, kwargs):
         if not self.request.headers:
             self.request.headers = {}
-        # import pytest; pytest.set_trace()
         if "conductor" not in self.request.headers:
             conductor_task = self.runner.poll_task()
             if conductor_task.task_id:

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import logging
 
 from celery import Task, shared_task
@@ -10,6 +11,15 @@ logger = logging.getLogger(__name__)
 
 class ConductorPollTask(Task):
     pass
+
+
+@dataclass
+class PooledConductorTask:
+    task_id: str
+    workflow_instance_id: str
+    worker_id: str
+    input_data: dict
+
 
 
 class ConductorTask(Task):
@@ -28,13 +38,19 @@ class ConductorTask(Task):
 
             if conductor_task.task_id is None:
                 return
+            
+            pct = PooledConductorTask(input_data=conductor_task.input_data,
+                                      task_id=conductor_task.task_id,
+                                      workflow_instance_id=conductor_task.workflow_instance_id,
+                                      worker_id=conductor_task.worker_id)
+            
             kwargs = conductor_task.input_data
             self.request.kwargs = conductor_task.input_data
             self.request.args = ()
             if not self.request.headers:
-                self.request.headers = {"conductor": conductor_task}
+                self.request.headers = {"conductor": pct}
             else:
-                self.request.headers["conductor"] = conductor_task
+                self.request.headers["conductor"] = pct
         else:
             conductor_task = self.request.headers["conductor"]
 

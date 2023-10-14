@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from celery import Task, shared_task
 
@@ -21,7 +21,6 @@ class PooledConductorTask:
     input_data: dict
 
 
-
 class ConductorTask(Task):
     """
     This handle a canductor task
@@ -38,12 +37,14 @@ class ConductorTask(Task):
 
             if conductor_task.task_id is None:
                 return
-            
-            pct = PooledConductorTask(input_data=conductor_task.input_data,
-                                      task_id=conductor_task.task_id,
-                                      workflow_instance_id=conductor_task.workflow_instance_id,
-                                      worker_id=conductor_task.worker_id)
-            
+
+            pct = PooledConductorTask(
+                input_data=conductor_task.input_data,
+                task_id=conductor_task.task_id,
+                workflow_instance_id=conductor_task.workflow_instance_id,
+                worker_id=conductor_task.worker_id,
+            )
+
             kwargs = conductor_task.input_data
             self.request.kwargs = conductor_task.input_data
             self.request.args = ()

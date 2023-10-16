@@ -77,6 +77,16 @@ class ConductorTask(Task):
         )
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
+        """
+        Method called when a task fails. Updates the task status in Conductor with the error message.
+
+        Args:
+            exc (Exception): The exception that caused the task to fail.
+            task_id (str): The ID of the failed task.
+            args (list): The arguments passed to the failed task.
+            kwargs (dict): The keyword arguments passed to the failed task.
+            einfo (ExceptionInfo): Information about the exception that caused the task to fail.
+        """
         if "conductor" not in self.request.headers:
             return
 

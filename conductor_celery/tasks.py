@@ -32,7 +32,7 @@ class ConductorTask(Task):
         logger.debug(f"ConductorTask configure_runner: {server_api_url}")
         self.runner = configure_runner(server_api_url=server_api_url, name=self.name, debug=True)
 
-    def before_start(self, task_id: str, args: tuple, kwargs: dict) -> None:
+    def before_start(self, task_id, args, kwargs):
         """
         Method called before a task is started. It sets the headers for the request and
         updates the kwargs and args based on the Conductor task information.

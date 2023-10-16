@@ -1,9 +1,8 @@
 import json
-
+import socket
 
 from conductor_celery.tasks import update_task
 from conductor_celery.utils import configure_runner
-import socket
 
 
 def test_update_task(celery_app, celery_worker, task_poll_response, responses):

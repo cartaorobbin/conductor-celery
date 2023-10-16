@@ -190,6 +190,7 @@ def test_conductor_task_other_signatures(celery_app, celery_worker, task_poll_re
 
 
 def test_conductor_task_delay(celery_app, celery_worker, task_poll_response):
+    httpretty.reset()
     worker_id = socket.gethostname()
     my_task_name = "task_name"
 
@@ -207,7 +208,8 @@ def test_conductor_task_delay(celery_app, celery_worker, task_poll_response):
 
     celery_worker.reload()
     assert mul.delay(2).get() == {"company": "3"}
-
+    # import pytest; pytest.set_trace()
+    # # assert len(httpretty.latest_requests()) == 2
     assert httpretty.latest_requests()[-1].url == "https://localhost:8080/api/tasks"
     body = json.loads(httpretty.latest_requests()[-1].body)
 

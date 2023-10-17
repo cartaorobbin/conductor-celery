@@ -1,12 +1,12 @@
-import logging
 from dataclasses import asdict, dataclass
 
 from celery import Task, shared_task
+from celery.utils.log import get_logger
 
 from conductor_celery.utils import configure_runner
 from conductor_celery.utils import update_task as real_update_task
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class ConductorPollTask(Task):
@@ -60,6 +60,7 @@ class ConductorTask(Task):
                 )
                 self.request.kwargs = conductor_task.input_data
                 self.request.args = []
+                logger.info("ConductorTask: %s", conductor_task.task_id)
 
     def on_success(self, retval, task_id, args, kwargs):
         if "conductor" not in self.request.headers:
@@ -75,6 +76,7 @@ class ConductorTask(Task):
                 "COMPLETED",
             )
         )
+        logger.info("ConductorTask: %s COMPLETED", conductor_task.task_id)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         """
@@ -100,6 +102,7 @@ class ConductorTask(Task):
                 "FAILED",
             )
         )
+        logger.info("ConductorTask: %s FAILED", conductor_task.task_id)
 
     def __call__(self, *args, **kwargs):
         """

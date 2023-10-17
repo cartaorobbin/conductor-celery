@@ -76,7 +76,6 @@ class ConductorTask(Task):
                 "COMPLETED",
             )
         )
-        logger.info("ConductorTask: %s COMPLETED", conductor_task.task_id)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         """

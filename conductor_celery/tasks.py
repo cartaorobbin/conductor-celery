@@ -70,12 +70,7 @@ class ConductorTask(Task):
         conductor_task = PooledConductorTask(**self.request.headers["conductor"])
 
         logger.info(
-            "%s [%s] on_success: update_task: %s start.",
-            (
-                self.name,
-                task_id,
-                conductor_task.task_id,
-            ),
+            f'{self.name} {task_id} on_success: update_task: {self.request.headers["conductor"]["task_id"]} start.'
         )
 
         self.runner.update_task(
@@ -88,12 +83,7 @@ class ConductorTask(Task):
             )
         )
         logger.info(
-            "%s [%s] on_success: update_task: %s done.",
-            (
-                self.name,
-                task_id,
-                conductor_task.task_id,
-            ),
+            f'{self.name} {task_id} on_success: update_task: {self.request.headers["conductor"]["task_id"]} done.'
         )
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
@@ -111,12 +101,7 @@ class ConductorTask(Task):
             return
 
         logger.info(
-            "%s [%s] on_failure: update_task: %s start.",
-            (
-                self.name,
-                task_id,
-                self.request.headers["conductor"]["task_id"],
-            ),
+            f'{self.name} {task_id} on_failure: update_task: {self.request.headers["conductor"]["task_id"]} start.'
         )
         conductor_task = PooledConductorTask(**self.request.headers["conductor"])
         self.runner.update_task(
@@ -129,12 +114,7 @@ class ConductorTask(Task):
             )
         )
         logger.info(
-            "%s [%s] on_failure: update_task: %s done.",
-            (
-                self.name,
-                task_id,
-                conductor_task.task_id,
-            ),
+            f'{self.name} {task_id} on_failure: update_task: {self.request.headers["conductor"]["task_id"]} done.'
         )
 
     def __call__(self, *args, **kwargs):

@@ -60,6 +60,7 @@ class ConductorTask(Task):
                 )
                 self.request.kwargs = conductor_task.input_data
                 self.request.args = []
+                logger.info(f"Task {self.name}[{task_id}] received.")
                 logger.info("ConductorTask: %s", conductor_task.task_id)
 
     def on_success(self, retval, task_id, args, kwargs):
@@ -67,6 +68,16 @@ class ConductorTask(Task):
             return
 
         conductor_task = PooledConductorTask(**self.request.headers["conductor"])
+
+        logger.info(
+            "%s [%s] on_success: update_task: %s start.",
+            (
+                self.name,
+                task_id,
+                conductor_task.task_id,
+            ),
+        )
+
         self.runner.update_task(
             real_update_task(
                 conductor_task.task_id,
@@ -75,6 +86,14 @@ class ConductorTask(Task):
                 retval,
                 "COMPLETED",
             )
+        )
+        logger.info(
+            "%s [%s] on_success: update_task: %s done.",
+            (
+                self.name,
+                task_id,
+                conductor_task.task_id,
+            ),
         )
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
@@ -91,6 +110,14 @@ class ConductorTask(Task):
         if "conductor" not in self.request.headers:
             return
 
+        logger.info(
+            "%s [%s] on_failure: update_task: %s start.",
+            (
+                self.name,
+                task_id,
+                self.request.headers["conductor"]["task_id"],
+            ),
+        )
         conductor_task = PooledConductorTask(**self.request.headers["conductor"])
         self.runner.update_task(
             real_update_task(
@@ -101,7 +128,14 @@ class ConductorTask(Task):
                 "FAILED",
             )
         )
-        logger.info("ConductorTask: %s FAILED", conductor_task.task_id)
+        logger.info(
+            "%s [%s] on_failure: update_task: %s done.",
+            (
+                self.name,
+                task_id,
+                conductor_task.task_id,
+            ),
+        )
 
     def __call__(self, *args, **kwargs):
         """

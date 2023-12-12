@@ -67,9 +67,7 @@ class ConductorTask(Task):
         if "conductor" not in self.request.headers:
             return
 
-        logger.info(
-            f'{self.name} {task_id} on_success: update_task: {self.request.headers} start.'
-        )
+        logger.info(f"{self.name} {task_id} on_success: update_task: {self.request.headers} {retval} start.")
 
         conductor_task = PooledConductorTask(**self.request.headers["conductor"])
 
@@ -100,9 +98,7 @@ class ConductorTask(Task):
         if "conductor" not in self.request.headers:
             return
 
-        logger.info(
-            f'{self.name} {task_id} on_failure: update_task: {self.request.headers} start.'
-        )
+        logger.info(f"{self.name} {task_id} on_failure: update_task: {self.request.headers} start.")
 
         conductor_task = PooledConductorTask(**self.request.headers["conductor"])
         self.runner.update_task(

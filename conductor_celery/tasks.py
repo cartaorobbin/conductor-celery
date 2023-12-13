@@ -30,7 +30,7 @@ class ConductorTask(Task):
         super().__init__(*args, **kwargs)
         server_api_url = self.app.conf["conductor_server_api_url"]
         logger.debug(f"ConductorTask configure_runner: {server_api_url}")
-        self.runner = configure_runner(server_api_url=server_api_url, name=self.name, debug=True)
+        self.runner = configure_runner(server_api_url=server_api_url, name=self.name, debug=False)
 
     def before_start(self, task_id, args, kwargs):
         """

@@ -4,13 +4,19 @@ from conductor.client.http.models.task_result import TaskResult
 
 from conductor_celery.wrapper import TaskRunner, Worker
 
+workers: dict = {}
+
 
 def configure_runner(server_api_url: str, name: str, debug=False):
-    configuration = Configuration(server_api_url=server_api_url, debug=True)
+    global workers
 
-    worker = Worker(name)
-    metrics_settings = MetricsSettings()
-    return TaskRunner(worker, configuration, metrics_settings)
+    if not workers.get(name):
+        configuration = Configuration(server_api_url=server_api_url, debug=debug)
+        worker = Worker(name)
+        metrics_settings = MetricsSettings()
+        workers[name] = TaskRunner(worker, configuration, metrics_settings)
+
+    return workers.get(name)
 
 
 def update_task(task_id, workflow_instance_id, worker_id, values, status) -> TaskResult:

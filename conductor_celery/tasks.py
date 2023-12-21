@@ -26,12 +26,6 @@ class ConductorTask(Task):
     This handle a canductor task
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        server_api_url = self.app.conf["conductor_server_api_url"]
-        logger.debug(f"ConductorTask configure_runner: {server_api_url}")
-        self.runner = configure_runner(server_api_url=server_api_url, name=self.name, debug=False)
-
     def before_start(self, task_id, args, kwargs):
         """
         Method called before a task is started. It sets the headers for the request and
@@ -45,6 +39,11 @@ class ConductorTask(Task):
         Returns:
             None
         """
+
+        server_api_url = self.app.conf["conductor_server_api_url"]
+        logger.debug(f"ConductorTask configure_runner: {server_api_url}")
+        self.runner = configure_runner(server_api_url=server_api_url, name=self.name, debug=False)
+
         if not self.request.headers:
             self.request.headers = {}
         if "conductor" not in self.request.headers:

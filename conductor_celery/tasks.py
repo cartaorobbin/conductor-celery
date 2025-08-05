@@ -1,13 +1,31 @@
+import json
+import os
+
+from kafka import KafkaProducer
 from dataclasses import asdict, dataclass
 
 from celery import Task, shared_task
 from celery.utils.log import get_logger
 
-from conductor_celery.utils import configure_runner
+from conductor_celery.utils import configure_runner, configure_env
 from conductor_celery.utils import update_task as real_update_task
+
+
 
 logger = get_logger(__name__)
 
+# load env
+configure_env()
+
+# caso não carregue a env, usar a config default dockercontainer kafka:9093
+KAFKA_BROKER_URL = os.getenv("KAFKA_BROKER_URL", "kafka:9093")
+KAFKA_TOPIC_FAIL = os.getenv("KAFKA_TOPIC_FAIL", "workspace_conductor_task_failures")
+
+def get_kafka_producer():
+    return KafkaProducer(
+        bootstrap_servers=KAFKA_BROKER_URL,
+        value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+    )
 
 class ConductorPollTask(Task):
     pass
@@ -109,6 +127,28 @@ class ConductorTask(Task):
                 "FAILED",
             )
         )
+
+        try:
+            producer = get_kafka_producer()
+            if producer:
+                event = {
+                    "task_name": self.name,
+                    "task_id": task_id,
+                    "workflow_instance_id": conductor_task.workflow_instance_id,
+                    "worker_id": conductor_task.worker_id,
+                    "error": str(exc),
+                    "args": args,
+                    "kwargs": kwargs,
+                }
+                producer.send(KAFKA_TOPIC_FAIL, event)
+                producer.flush()
+                logger.info(f"Sent failure event to Kafka topic '{KAFKA_TOPIC_FAIL}': {event}")
+            else:
+                logger.warning("KafkaProducer not available, skipping Kafka event send.")
+        except Exception as kafka_exc:
+            logger.error(f"Failed to send Kafka event: {kafka_exc}")
+
+        
         logger.info(
             f'{self.name} {task_id} on_failure: update_task: {self.request.headers["conductor"]["task_id"]} done.'
         )

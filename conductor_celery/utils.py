@@ -1,25 +1,10 @@
-import os
 from conductor.client.configuration.configuration import Configuration
 from conductor.client.configuration.settings.metrics_settings import MetricsSettings
 from conductor.client.http.models.task_result import TaskResult
 
 from conductor_celery.wrapper import TaskRunner, Worker
-from dotenv import load_dotenv
 
 workers: dict = {}
-
-
-def configure_env():
-    # Verificar se o DD_ENV está definido
-    if os.getenv("DD_ENV") == "staging":
-        print("Loading staging env")
-        load_dotenv(dotenv_path=".env.staging")
-    elif os.getenv("DD_ENV") == "production":
-        print("Loading production env")
-        load_dotenv(dotenv_path=".env.production")
-    else:
-        print("Loading default env")
-        load_dotenv()
 
 def configure_runner(server_api_url: str, name: str, debug=False):
     global workers

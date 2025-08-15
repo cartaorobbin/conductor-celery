@@ -14,8 +14,15 @@ packages = [
 python = ">=3.8,<4.0"
 celery = "^5.3.1"
 conductor-python = "1.0.71"
-kafka-python = "^2.2.15"
 dotenv = "^0.9.9"
+kafka-python = {version = "^2.2.15", optional = true}
+pyramid = {version = "^2.0.0", optional = true}
+plaster-pastedeploy = "^1.0.1"
+
+[tool.poetry.extras]
+kafka = ["kafka-python"]
+pyramid = ["pyramid"]
+all = ["kafka-python", "pyramid"]
 
 [tool.poetry.group.dev.dependencies]
 pytest-cov = "^4.0.0"

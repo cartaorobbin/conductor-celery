@@ -1,18 +1,14 @@
-import json
-import os
-
-from kafka import KafkaProducer
 from dataclasses import asdict, dataclass
 
 from celery import Task, shared_task
 from celery.utils.log import get_logger
 
-from conductor_celery.utils import configure_runner, configure_env
+from conductor_celery.ext import get_extension_instance
+from conductor_celery.utils import configure_runner
 from conductor_celery.utils import update_task as real_update_task
 
-from conductor_celery.events.workspace_task_failure import WorkspaceTaskFailure
-
 logger = get_logger(__name__)
+
 
 class ConductorPollTask(Task):
     pass
@@ -84,6 +80,26 @@ class ConductorTask(Task):
                 "COMPLETED",
             )
         )
+
+        # Notify event handlers extension if available
+        try:
+            from conductor_celery.ext.event_handlers import TaskSuccessEvent
+
+            event_handlers = get_extension_instance("event_handlers")
+            if event_handlers:
+                event = TaskSuccessEvent(
+                    task_name=self.name,
+                    task_id=task_id,
+                    workflow_instance_id=conductor_task.workflow_instance_id,
+                    worker_id=conductor_task.worker_id,
+                    result=retval,
+                    args=args,
+                    kwargs=kwargs,
+                )
+                event_handlers.handle_success(event)
+        except Exception as e:
+            logger.warning(f"Error notifying success handlers: {e}")
+
         logger.info(
             f'{self.name} {task_id} on_success: update_task: {self.request.headers["conductor"]["task_id"]} done.'
         )
@@ -114,19 +130,25 @@ class ConductorTask(Task):
                 "FAILED",
             )
         )
-        self.request.registry.notify(
-            WorkspaceTaskFailure(self.request, {
-                "task_name": self.name,
-                "task_id": task_id,
-                "workflow_instance_id": conductor_task.workflow_instance_id,
-                "worker_id": conductor_task.worker_id,
-                "error": str(exc),
-                "args": args,
-                "kwargs": kwargs,
-            })
-        )
+        # Notify event handlers extension if available
+        try:
+            from conductor_celery.ext.event_handlers import TaskFailureEvent
 
-        
+            event_handlers = get_extension_instance("event_handlers")
+            if event_handlers:
+                event = TaskFailureEvent(
+                    task_name=self.name,
+                    task_id=task_id,
+                    workflow_instance_id=conductor_task.workflow_instance_id,
+                    worker_id=conductor_task.worker_id,
+                    error=str(exc),
+                    args=args,
+                    kwargs=kwargs,
+                )
+                event_handlers.handle_failure(event)
+        except Exception as e:
+            logger.warning(f"Error notifying failure handlers: {e}")
+
         logger.info(
             f'{self.name} {task_id} on_failure: update_task: {self.request.headers["conductor"]["task_id"]} done.'
         )

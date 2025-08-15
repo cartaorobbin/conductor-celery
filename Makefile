@@ -5,6 +5,26 @@ install: ## Install the poetry environment and install the pre-commit hooks
 	@ poetry run pre-commit install
 	@poetry shell
 
+.PHONY: install-kafka
+install-kafka: ## Install with Kafka extension
+	@echo "🚀 Installing with Kafka extension"
+	@poetry install -E kafka
+
+.PHONY: install-pyramid
+install-pyramid: ## Install with Pyramid extension
+	@echo "🚀 Installing with Pyramid extension"
+	@poetry install -E pyramid
+
+.PHONY: install-all
+install-all: ## Install with all extensions
+	@echo "🚀 Installing with all extensions"
+	@poetry install -E all
+
+.PHONY: demo
+demo: ## Run the extension demo
+	@echo "🚀 Running extension demo"
+	@poetry run python examples/demo_extensions.py
+
 .PHONY: check
 check: ## Run code quality tools.
 	@echo "🚀 Checking Poetry lock file consistency with 'pyproject.toml': Running poetry lock --check"

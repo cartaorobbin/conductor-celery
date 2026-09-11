@@ -1,0 +1,23 @@
+version: '3'
+services:
+  dev-service:
+      # Paths are relative to this compose file (the first entry in
+      # devcontainer.json "dockerComposeFile"), which lives in .devcontainer/.
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        VARIANT: "ubuntu-22.04"
+    volumes:
+      - ..:/workspace/conductor_celery
+      - bashhistory:/commandhistory
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    networks:
+      - internal
+
+
+networks:
+  internal:
+
+volumes:
+    bashhistory:

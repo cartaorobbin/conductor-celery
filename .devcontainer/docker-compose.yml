@@ -1,17 +1,17 @@
 version: '3'
 services:
   dev-service:
-      # Note that the path of the Dockerfile and context is relative to the *primary*
-      # docker-compose.yml file (the first in the devcontainer.json "dockerComposeFile"
-      # array). The sample below assumes your primary file is in the root of your project.
+      # context and volumes are relative to this compose file.
+      # dockerfile is relative to the build context (the repo root).
     build:
-      context: .
+      context: ..
       dockerfile: .devcontainer/Dockerfile
       args:
         VARIANT: "ubuntu-22.04"
     volumes:
-      - .:/workspace
+      - ..:/workspace/conductor_celery
       - bashhistory:/commandhistory
+    working_dir: /workspace/conductor_celery
     command: /bin/sh -c "while sleep 1000; do :; done"
     networks:
       - internal

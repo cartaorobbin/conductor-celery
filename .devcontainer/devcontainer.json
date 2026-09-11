@@ -5,6 +5,13 @@
 	"dockerComposeFile": ["docker-compose.yml"],
 	"service": "dev-service",
 	"workspaceFolder": "/workspace/conductor_celery",
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.cwd": "/workspace/conductor_celery"
+			}
+		}
+	},
 	// 	// Use ubuntu-22.04 or ubuntu-18.04 on local arm64/Apple Silicon.
 	// "args": { "VARIANT": "ubuntu-22.04" },
 	// },

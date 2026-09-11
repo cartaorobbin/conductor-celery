@@ -1,11 +1,11 @@
 version: '3'
 services:
   dev-service:
-      # Paths are relative to this compose file (the first entry in
-      # devcontainer.json "dockerComposeFile"), which lives in .devcontainer/.
+      # context and volumes are relative to this compose file.
+      # dockerfile is relative to the build context (the repo root).
     build:
       context: ..
-      dockerfile: Dockerfile
+      dockerfile: .devcontainer/Dockerfile
       args:
         VARIANT: "ubuntu-22.04"
     volumes:

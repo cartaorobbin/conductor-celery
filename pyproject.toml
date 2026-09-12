@@ -1,13 +1,21 @@
-[tool.poetry]
+[project]
 name = "conductor_celery"
 version = "0.0.3"
 description = "This is a template repository for Python projects that use Poetry for their dependency management."
-authors = ["Tomas Correa <ftomas.correa@gmail.com>"]
+authors = [
+    { name = "Tomas Correa", email = "ftomas.correa@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.8,<4.0"
+dynamic = ["dependencies"]
+
+[project.urls]
 repository = "https://github.com/tomas_correa/conductor-celery"
 documentation = "https://tomas_correa.github.io/conductor-celery/"
-readme = "README.md"
+
+[tool.poetry]
 packages = [
-  {include = "conductor_celery"}
+  { include = "conductor_celery" }
 ]
 
 [tool.poetry.dependencies]

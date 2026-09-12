@@ -6,6 +6,10 @@ inputs:
      required: false
      description: "The python version to use"
      default: "3.11"
+   poetry-version:
+     required: false
+     description: "The Poetry version to install"
+     default: "2.4.3"
 
 runs:
   using: "composite"
@@ -18,6 +22,7 @@ runs:
     - name: Install Poetry
       uses: snok/install-poetry@v1
       with:
+        version: ${{ inputs.poetry-version }}
         virtualenvs-in-project: true
 
     - name: Load cached venv
@@ -25,7 +30,7 @@ runs:
       uses: actions/cache@v3
       with:
         path: .venv
-        key: venv-${{ runner.os }}-${{ inputs.python-version }}-${{ hashFiles('poetry.lock') }}
+        key: venv-${{ runner.os }}-${{ inputs.python-version }}-${{ inputs.poetry-version }}-${{ hashFiles('poetry.lock') }}
 
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'

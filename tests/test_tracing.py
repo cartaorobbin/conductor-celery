@@ -149,7 +149,9 @@ def test_conductor_task_restores_parent_trace_id(celery_app, celery_worker, task
     assert mul.apply().result == {"total": 8, "trace_id": parent_trace_id}
 
 
-def test_conductor_task_keeps_parent_trace_id_on_retry(celery_app, celery_worker, task_poll_response, responses, tracer):
+def test_conductor_task_keeps_parent_trace_id_on_retry(
+    celery_app, celery_worker, task_poll_response, responses, tracer
+):
     """Celery retry re-attaches the stored carrier so the parent trace_id is kept."""
     with tracer.start_as_current_span("starter") as span:
         parent_trace_id = format(span.get_span_context().trace_id, "032x")

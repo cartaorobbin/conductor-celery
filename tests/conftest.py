@@ -2,6 +2,10 @@ import json
 import socket
 
 import pytest
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
 
 @pytest.fixture(scope="session")
@@ -12,6 +16,31 @@ def celery_config():
 @pytest.fixture(scope="session")
 def celery_includes():
     return ["conductor_celery.tasks"]
+
+
+@pytest.fixture(scope="session")
+def tracer_provider():
+    provider = TracerProvider()
+    trace.set_tracer_provider(provider)
+    return provider
+
+
+@pytest.fixture(scope="session")
+def span_exporter(tracer_provider):
+    exporter = InMemorySpanExporter()
+    tracer_provider.add_span_processor(SimpleSpanProcessor(exporter))
+    return exporter
+
+
+@pytest.fixture
+def tracer(tracer_provider):
+    return trace.get_tracer("conductor_celery.tests")
+
+
+@pytest.fixture
+def finished_spans(span_exporter):
+    span_exporter.clear()
+    return span_exporter
 
 
 @pytest.fixture

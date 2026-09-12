@@ -23,7 +23,7 @@ Poetry owns dependencies (`pyproject.toml` + `poetry.lock`). Quality commands li
 
 ### Celery Task subclass as the integration point
 
-`ConductorTask` hooks Celery's `before_start`, `on_success`, `on_failure`, `after_return`, and `__call__`. Polling happens in `before_start` only when the request has no `conductor` header. The poll result is split by `tracing.split_trace_context`: reserved keys (`correlation_id`, `traceparent`, `tracestate`) are removed, the remaining dict replaces `request.kwargs`, and the carrier is stored on `request.headers["otel"]`. Every `before_start` (including Celery retries) starts a recording `conductor.task` child span from that carrier; `after_return` ends it. Success and failure map to Conductor statuses COMPLETED and FAILED. See `knowledge/tracing.md`.
+`ConductorTask` hooks Celery's `before_start`, `on_success`, `on_failure`, `after_return`, and `__call__`. Polling happens in `before_start` only when the request has no `conductor` header. The poll result is split by `tracing.split_trace_context`: reserved keys (`traceparent`, `tracestate`) are removed, the remaining dict replaces `request.kwargs`, and the carrier is stored on `request.headers["otel"]`. Every `before_start` (including Celery retries) starts a recording `conductor.task` child span from that carrier; `after_return` ends it. Success and failure map to Conductor statuses COMPLETED and FAILED. See `knowledge/tracing.md`.
 
 ### TaskRunner wraps conductor-python private methods
 
@@ -54,4 +54,4 @@ Celery worker
 - `configure_runner` caches by task name; changing server URL for an already-seen name will reuse the first runner.
 - Calling a `ConductorTask` like a function does nothing useful unless `request.headers` already has `conductor`.
 - pytest uses `pytest-celery` plus `responses` to stub Conductor HTTP (`/tasks/poll/...` and `/tasks`).
-- `correlation_id` / `traceparent` / `tracestate` in Conductor `inputData` are stripped before the worker function runs. The carrier is kept in `request.headers["otel"]` for retries. See `knowledge/tracing.md`.
+- `traceparent` / `tracestate` in Conductor `inputData` are stripped before the worker function runs. The carrier is kept in `request.headers["otel"]` for retries. See `knowledge/tracing.md`.

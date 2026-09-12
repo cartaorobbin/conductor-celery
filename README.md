@@ -17,25 +17,25 @@ This is a template repository for Python projects that use Poetry for their depe
 
 Celery polls Conductor later, so the worker would start a new Datadog / OpenTelemetry trace unless you pass the current W3C context.
 
-When starting a workflow, inject the current span and send it as `correlation_id`:
+When starting a workflow, inject the current span as `traceparent`:
 
 ```python
 from opentelemetry.propagate import inject
 
 carrier = {}
 inject(carrier)
-workflow_input["correlation_id"] = carrier["traceparent"]
+workflow_input["traceparent"] = carrier["traceparent"]
 ```
 
 Map that field on every SIMPLE task (`Conductor` does not forward workflow input automatically):
 
 ```json
 "inputParameters": {
-  "correlation_id": "${workflow.input.correlation_id}"
+  "traceparent": "${workflow.input.traceparent}"
 }
 ```
 
-`ConductorTask` strips `correlation_id` (and optional `traceparent` / `tracestate`) from the task kwargs, restores the parent context, and records a `conductor.task` span. Task functions do not take `correlation_id`.
+`ConductorTask` strips `traceparent` (and optional `tracestate`) from the task kwargs, restores the parent context, and records a `conductor.task` span. Task functions do not take `traceparent`.
 
 If the worker uses Datadog `ddtrace`, set `DD_TRACE_OTEL_ENABLED=true` so the attached OpenTelemetry context is visible to Datadog.
 

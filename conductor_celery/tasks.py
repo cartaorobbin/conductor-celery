@@ -3,6 +3,12 @@ from dataclasses import asdict, dataclass
 from celery import Task, shared_task
 from celery.utils.log import get_logger
 
+from conductor_celery.tracing import (
+    activate_trace_context,
+    deactivate_trace_context,
+    split_trace_context,
+    tag_current_span,
+)
 from conductor_celery.utils import configure_runner
 from conductor_celery.utils import update_task as real_update_task
 
@@ -49,18 +55,35 @@ class ConductorTask(Task):
         if "conductor" not in self.request.headers:
             conductor_task = self.runner.poll_task()
             if conductor_task.task_id:
+                task_kwargs, carrier = split_trace_context(conductor_task.input_data)
                 self.request.headers["conductor"] = asdict(
                     PooledConductorTask(
-                        input_data=conductor_task.input_data,
+                        input_data=task_kwargs,
                         task_id=conductor_task.task_id,
                         workflow_instance_id=conductor_task.workflow_instance_id,
                         worker_id=conductor_task.worker_id,
                     )
                 )
-                self.request.kwargs = conductor_task.input_data
+                self.request.headers["otel"] = carrier
+                self.request.kwargs = task_kwargs
                 self.request.args = []
                 logger.info(f"Task {self.name}[{task_id}] received.")
                 logger.info("ConductorTask: %s", conductor_task.task_id)
+
+        self._restore_trace_context(task_id)
+
+    def _restore_trace_context(self, task_id: str) -> None:
+        if "conductor" not in self.request.headers:
+            return
+
+        carrier = self.request.headers.get("otel") or {}
+        conductor_task = PooledConductorTask(**self.request.headers["conductor"])
+        activate_trace_context(task_id, carrier)
+        tag_current_span(
+            carrier,
+            conductor_task.task_id,
+            conductor_task.workflow_instance_id,
+        )
 
     def on_success(self, retval, task_id, args, kwargs):
         if "conductor" not in self.request.headers:
@@ -112,6 +135,10 @@ class ConductorTask(Task):
         logger.info(
             f'{self.name} {task_id} on_failure: update_task: {self.request.headers["conductor"]["task_id"]} done.'
         )
+
+    def after_return(self, status, retval, task_id, args, kwargs, einfo):
+        deactivate_trace_context(task_id)
+        return super().after_return(status, retval, task_id, args, kwargs, einfo)
 
     def __call__(self, *args, **kwargs):
         """

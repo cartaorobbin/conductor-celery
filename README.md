@@ -13,6 +13,32 @@ This is a template repository for Python projects that use Poetry for their depe
 - **Github repository**: <https://github.com/tomas_correa/conductor-celery/>
 - **Documentation** <https://tomas_correa.github.io/conductor-celery/>
 
+## Tracing through Conductor
+
+Celery polls Conductor later, so the worker would start a new Datadog / OpenTelemetry trace unless you pass the current W3C context.
+
+When starting a workflow, inject the current span and send it as `correlation_id`:
+
+```python
+from opentelemetry.propagate import inject
+
+carrier = {}
+inject(carrier)
+workflow_input["correlation_id"] = carrier["traceparent"]
+```
+
+Map that field on every SIMPLE task (`Conductor` does not forward workflow input automatically):
+
+```json
+"inputParameters": {
+  "correlation_id": "${workflow.input.correlation_id}"
+}
+```
+
+`ConductorTask` strips `correlation_id` (and optional `traceparent` / `tracestate`) from the task kwargs, restores the parent context, and records a `conductor.task` span. Task functions do not take `correlation_id`.
+
+If the worker uses Datadog `ddtrace`, set `DD_TRACE_OTEL_ENABLED=true` so the attached OpenTelemetry context is visible to Datadog.
+
 ## Getting started with your project
 
 First, create a repository on GitHub with the same name as this project, and then run the following commands:
